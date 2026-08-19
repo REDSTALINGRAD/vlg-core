@@ -414,6 +414,7 @@
     text-transform: uppercase;
     cursor: pointer;
     backdrop-filter: blur(16px);
+    position: relative;
     transform: translateY(18px) scale(.96);
     opacity: 0;
     transition:
@@ -436,8 +437,7 @@
   .menu button:nth-child(4) { transition-delay: .2s; }
   .menu button:nth-child(5) { transition-delay: .25s; }
 
-  .menu button:hover,
-  .menu button.active {
+  .menu button:hover {
     color: var(--accent);
     border-color: rgba(113,255,215,.34);
     background: linear-gradient(180deg, rgba(12,18,20,.86), rgba(8,12,14,.65));
@@ -445,6 +445,28 @@
       0 14px 40px rgba(0,0,0,.24),
       0 0 24px rgba(113,255,215,.08),
       0 0 0 1px rgba(255,255,255,.014) inset;
+  }
+
+  .menu button.active {
+    color: var(--accent);
+    border-color: rgba(113,255,215,.46);
+    background: linear-gradient(180deg, rgba(13,19,21,.92), rgba(8,12,14,.72));
+    box-shadow:
+      0 14px 40px rgba(0,0,0,.26),
+      0 0 0 1px rgba(113,255,215,.14) inset;
+  }
+
+  .menu button.active::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 6px;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px rgba(113,255,215,.5);
   }
 
   .panel-layer {
@@ -734,6 +756,7 @@
     display: grid;
     grid-template-rows: auto 1fr;
     cursor: pointer;
+    position: relative;
     opacity: 0;
     translate: 0 16px;
     transition:
@@ -754,9 +777,34 @@
   .page-panel.open .gallery-card:nth-child(4) { transition-delay: .42s; }
 
   .gallery-card:hover {
-    border-color: rgba(113,255,215,.4);
-    box-shadow: 0 0 34px rgba(113,255,215,.10);
-    transform: translateY(-3px);
+    border-color: rgba(113,255,215,.42);
+    box-shadow: 0 0 40px rgba(113,255,215,.14), 0 14px 34px rgba(0,0,0,.3);
+    transform: scale(1.02);
+  }
+
+  .gallery-card::after {
+    content: attr(data-tech);
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    z-index: 2;
+    padding: 4px 8px;
+    border: 1px solid rgba(113,255,215,.22);
+    border-radius: 6px;
+    background: rgba(5,8,9,.72);
+    backdrop-filter: blur(6px);
+    color: #9fb0ad;
+    font: 9px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    opacity: 0;
+    translate: 0 -4px;
+    transition: opacity .3s ease, translate .3s ease;
+    pointer-events: none;
+  }
+  .gallery-card:hover::after {
+    opacity: 1;
+    translate: 0 0;
   }
 
   .gallery-card img {
@@ -866,8 +914,8 @@
     border: 1px solid rgba(196,255,244,.18);
     border-radius: 12px;
     box-shadow: 0 30px 90px rgba(0,0,0,.6), 0 0 60px rgba(113,255,215,.06);
-    transform: scale(.96);
-    transition: transform .4s var(--ease-out);
+    transform: scale(.9);
+    transition: transform .55s cubic-bezier(.16, 1, .3, 1);
   }
   .lightbox.open .lightbox-stage img { transform: scale(1); }
   .lightbox-stage figcaption {
@@ -1034,7 +1082,7 @@
       <div class="panel-top">
         <span class="panel-index">02</span>
         <span class="panel-title" data-i18n="services_title">Архитектура</span>
-        <span class="panel-signal" data-i18n="services_signal">карта системы</span>
+        <span class="panel-signal" data-i18n="services_signal">системный узел</span>
         <button class="close-btn" aria-label="Закрыть">×</button>
       </div>
       <div class="panel-content">
@@ -1060,7 +1108,7 @@
       <div class="panel-top">
         <span class="panel-index">03</span>
         <span class="panel-title" data-i18n="projects_title">Процесс</span>
-        <span class="panel-signal" data-i18n="projects_signal">рабочий поток</span>
+        <span class="panel-signal" data-i18n="projects_signal">узел процесса</span>
         <button class="close-btn" aria-label="Закрыть">×</button>
       </div>
       <div class="panel-content">
@@ -1088,7 +1136,7 @@
       <div class="panel-top">
         <span class="panel-index">04</span>
         <span class="panel-title" data-i18n="gallery_title">Галерея</span>
-        <span class="panel-signal" data-i18n="gallery_signal">визуальные слоты</span>
+        <span class="panel-signal" data-i18n="gallery_signal">визуальный узел</span>
         <button class="close-btn" aria-label="Закрыть">×</button>
       </div>
       <div class="panel-content">
@@ -1103,19 +1151,19 @@
         </div>
         <div class="panel-anim">
           <div class="gallery-grid">
-            <figure class="gallery-card">
+            <figure class="gallery-card" data-tech="core.render">
               <img src="galary/1.webp" alt="VLG Code — ядро системы, HUD-интерфейс" loading="lazy" />
               <figcaption><div class="slot" data-i18n="gallery_slot1">кейс 01</div><strong data-i18n="gallery_c1">Ядро системы</strong><p data-i18n="gallery_c1p">Сфера-ядро с HUD-оболочкой и панелями статуса.</p></figcaption>
             </figure>
-            <figure class="gallery-card">
+            <figure class="gallery-card" data-tech="arch.map">
               <img src="galary/2.webp" alt="VLG Code — серверная архитектура" loading="lazy" />
               <figcaption><div class="slot" data-i18n="gallery_slot2">кейс 02</div><strong data-i18n="gallery_c2">Архитектура</strong><p data-i18n="gallery_c2p">Дата-центр и модульный контур в перспективе.</p></figcaption>
             </figure>
-            <figure class="gallery-card">
+            <figure class="gallery-card" data-tech="mod.scheme">
               <img src="galary/3.webp" alt="VLG Code — схема модулей" loading="lazy" />
               <figcaption><div class="slot" data-i18n="gallery_slot3">кейс 03</div><strong data-i18n="gallery_c3">Модули</strong><p data-i18n="gallery_c3p">Схема связей ядра, данных, ИИ и безопасности.</p></figcaption>
             </figure>
-            <figure class="gallery-card">
+            <figure class="gallery-card" data-tech="ui.screen">
               <img src="galary/4.webp" alt="VLG Code — интерфейсный экран" loading="lazy" />
               <figcaption><div class="slot" data-i18n="gallery_slot4">кейс 04</div><strong data-i18n="gallery_c4">Интерфейс</strong><p data-i18n="gallery_c4p">Экран системы с потоками данных и метриками.</p></figcaption>
             </figure>
@@ -1189,6 +1237,7 @@
   let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
   let spinBoost = 0;
   let pulseBoost = 0;
+  let ringPulse = 0;
   let coreRadius = 180;
   let reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let interfaceAwake = false;
@@ -1273,6 +1322,7 @@
     t += reducedMotion ? .0015 : .0045;
     spinBoost *= .965;
     pulseBoost *= .94;
+    ringPulse *= .92;
 
     mouseX += (targetX - mouseX) * .045;
     mouseY += (targetY - mouseY) * .045;
@@ -1293,12 +1343,12 @@
     ctx.save();
     ctx.translate(cx, cy);
     rings.forEach((ring, idx) => {
-      const rr = radius * (1.2 + idx * .09 + Math.sin(t*1.2 + ring.phase)*.02);
+      const rr = radius * (1.2 + idx * .09 + Math.sin(t*1.2 + ring.phase)*.02) * (1 + ringPulse * .12);
       ctx.save();
       ctx.rotate(t * ring.speed + ring.phase);
       ctx.scale(1, .26 + idx*.03);
-      ctx.strokeStyle = `rgba(134, 255, 225, ${0.10 - idx*.014})`;
-      ctx.lineWidth = .6;
+      ctx.strokeStyle = `rgba(134, 255, 225, ${(0.10 - idx*.014) + ringPulse * .22})`;
+      ctx.lineWidth = .6 + ringPulse * .8;
       ctx.setLineDash([2, 6 + idx*2]);
       ctx.beginPath(); ctx.arc(0, 0, rr, 0, Math.PI*2); ctx.stroke();
       ctx.restore();
@@ -1412,6 +1462,7 @@
     coreHint.textContent = I18N[currentLang].hint_awake;
     pulseBoost = 1.2;
     spinBoost = .75;
+    ringPulse = 1;
     statusText.textContent = I18N[currentLang].status_unlocked;
   }
 
@@ -1538,7 +1589,7 @@
       about_m2: 'Автоматизация бизнеса', about_m2s: 'Связка процессов, данных и интерфейсов в один рабочий контур.',
       about_m3: 'Локальный и облачный ИИ', about_m3s: 'Выбор модели и инфраструктуры под приватность, скорость и бюджет.',
       about_m4: 'Web-системы', about_m4s: 'Панели, внутренние кабинеты и сайты с инженерной логикой.',
-      services_title: 'Архитектура', services_signal: 'карта системы', services_eyebrow: '02 / АРХИТЕКТУРА',
+      services_title: 'Архитектура', services_signal: 'системный узел', services_eyebrow: '02 / АРХИТЕКТУРА',
       services_h2: 'От запроса — к работающему контуру.',
       services_p: 'Сначала определяется полезный сценарий: где возникает ценность, какие данные участвуют, кто взаимодействует с системой и какой выход должен быть на выходе. Только после этого строится интерфейс, сервисный слой и маршрут автоматизации.',
       services_tag1: 'вход', services_text1: 'Задача, пользовательский поток, данные, ограничения, правила доступа.',
@@ -1547,7 +1598,7 @@
       services_m1t: 'Блок архитектуры', services_m1: 'Данные → Логика → Интерфейс', services_m1s: 'Система строится по прозрачной цепочке, а не по набору разрозненных функций.',
       services_m2t: 'Безопасность', services_m2: 'Контроль доступа', services_m2s: 'Разделение ролей, приватные данные и безопасные маршруты обращения к модели.',
       services_m3t: 'Масштабируемость', services_m3: 'Масштабирование', services_m3s: 'Возможность позже расширить контур новыми задачами и новыми источниками данных.',
-      projects_title: 'Процесс', projects_signal: 'рабочий поток', projects_eyebrow: '03 / ПРОЦЕСС',
+      projects_title: 'Процесс', projects_signal: 'узел процесса', projects_eyebrow: '03 / ПРОЦЕСС',
       projects_h2: 'Понятный маршрут. Без чёрного ящика.',
       projects_p: 'Объём, сроки и стоимость определяются после разбора задачи. Каждый этап имеет проверяемый результат: сначала диагностика, затем архитектура, затем сборка и запуск. Это помогает не терять время и не раздувать ненужный функционал.',
       projects_tag1: 'шаг 01', projects_text1: 'Диагностика задачи и определение полезного сценария.',
@@ -1558,7 +1609,7 @@
       projects_m2t: 'ШАГ 02', projects_m2: 'Архитектура', projects_m2s: 'Определяется система модулей, источников, ролей и интерфейсных узлов.',
       projects_m3t: 'ШАГ 03', projects_m3: 'Сборка', projects_m3s: 'Реализация кода, логики, интеграций и интерфейсной оболочки.',
       projects_m4t: 'ШАГ 04', projects_m4: 'Запуск', projects_m4s: 'Проверка, включение в рабочий процесс и подготовка к дальнейшему росту.',
-      gallery_title: 'Галерея', gallery_signal: 'визуальные слоты', gallery_eyebrow: '04 / ГАЛЕРЕЯ',
+      gallery_title: 'Галерея', gallery_signal: 'визуальный узел', gallery_eyebrow: '04 / ГАЛЕРЕЯ',
       gallery_h2: 'Визуальные кейсы VLG Code.',
       gallery_p: 'Подборка концептов и интерфейсных экранов системы: ядро, архитектура, модули и рабочие контуры. Каждое изображение — отдельный слой визуального языка проекта.',
       gallery_tag1: 'ядро', gallery_text1: 'Сфера-ядро и HUD-оболочка — центральный визуальный мотив системы.',
@@ -1603,7 +1654,7 @@
       about_m2: 'Business automation', about_m2s: 'Connecting processes, data and interfaces into one working loop.',
       about_m3: 'Local & cloud AI', about_m3s: 'Choosing the model and infrastructure for privacy, speed and budget.',
       about_m4: 'Web systems', about_m4s: 'Dashboards, internal portals and sites with engineering logic.',
-      services_title: 'Architecture', services_signal: 'system map', services_eyebrow: '02 / ARCHITECTURE',
+      services_title: 'Architecture', services_signal: 'system node', services_eyebrow: '02 / ARCHITECTURE',
       services_h2: 'From a request — to a working loop.',
       services_p: 'First we define the useful scenario: where value appears, which data is involved, who interacts with the system and what the output should be. Only then do we build the interface, the service layer and the automation route.',
       services_tag1: 'input', services_text1: 'Task, user flow, data, constraints, access rules.',
@@ -1612,7 +1663,7 @@
       services_m1t: 'Architecture block', services_m1: 'Data → Logic → Interface', services_m1s: 'The system is built along a transparent chain, not a set of disconnected functions.',
       services_m2t: 'Security', services_m2: 'Access control', services_m2s: 'Role separation, private data and secure routes to the model.',
       services_m3t: 'Scalability', services_m3: 'Scaling', services_m3s: 'The ability to later extend the loop with new tasks and new data sources.',
-      projects_title: 'Process', projects_signal: 'workflow', projects_eyebrow: '03 / PROCESS',
+      projects_title: 'Process', projects_signal: 'process node', projects_eyebrow: '03 / PROCESS',
       projects_h2: 'A clear route. No black box.',
       projects_p: 'Scope, timeline and cost are defined after the task is analyzed. Each stage has a verifiable result: first diagnostics, then architecture, then build and launch. This avoids wasting time and bloating unnecessary features.',
       projects_tag1: 'step 01', projects_text1: 'Diagnosing the task and defining the useful scenario.',
@@ -1623,7 +1674,7 @@
       projects_m2t: 'STEP 02', projects_m2: 'Architecture', projects_m2s: 'The system of modules, sources, roles and interface nodes is defined.',
       projects_m3t: 'STEP 03', projects_m3: 'Build', projects_m3s: 'Implementation of code, logic, integrations and the interface shell.',
       projects_m4t: 'STEP 04', projects_m4: 'Launch', projects_m4s: 'Verification, integration into the workflow and preparation for further growth.',
-      gallery_title: 'Gallery', gallery_signal: 'visual slots', gallery_eyebrow: '04 / GALLERY',
+      gallery_title: 'Gallery', gallery_signal: 'visual node', gallery_eyebrow: '04 / GALLERY',
       gallery_h2: 'Visual cases by VLG Code.',
       gallery_p: 'A selection of concepts and interface screens of the system: the core, architecture, modules and working loops. Each image is a separate layer of the project visual language.',
       gallery_tag1: 'core', gallery_text1: 'The core sphere and HUD shell — the central visual motif of the system.',

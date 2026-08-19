@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>VLG Code — AI Systems & Digital Engineering</title>
 <style>
   :root {
@@ -21,6 +21,20 @@
   }
 
   * { box-sizing: border-box; }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  button {
+    touch-action: manipulation;
+  }
 
   html, body {
     width: 100%;
@@ -827,25 +841,36 @@
 
   @media (max-width: 650px) {
     .hud-frame { left: 3vw; right: 3vw; top: 3vh; bottom: 3vh; }
-    .topbar { top: 4.2vh; left: 6vw; right: 6vw; }
+    .topbar { top: 4.2vh; left: 6vw; right: 6vw; height: 54px; }
     .brand { min-width: 132px; padding: 0 15px; font-size: 13px; }
     .brand small { display: none; }
-    .micro-btn { width: 52px; }
+    .micro-btn { width: 52px; min-height: 44px; }
     .headline { display: none; }
-    .kicker { top: 26vh; }
-    .micro-copy { bottom: 17vh; }
+    .kicker { top: 26vh; font-size: 9px; }
+    .micro-copy { bottom: 17vh; font-size: 9px; }
     .core-hit { width: 66vw; }
-    .core-hint { top: calc(50% + 34vw); }
+    .core-hint { top: calc(50% + 34vw); font-size: 9px; }
     .menu-dock { bottom: 5.7vh; width: 90vw; }
     .menu { width: 100%; overflow-x: auto; justify-content: flex-start; padding-bottom: 4px; scrollbar-width: none; flex-wrap: nowrap; }
     .menu::-webkit-scrollbar { display: none; }
-    .menu button { min-width: 114px; }
-    .page-panel { width: 92vw; min-height: 79vh; max-height: 79vh; }
-    .panel-top { padding: 0 16px 0 18px; }
+    .menu button { min-width: 114px; min-height: 44px; }
+    .page-panel { width: 92vw; min-height: 82vh; max-height: 82vh; }
+    .panel-top { padding: 0 16px 0 18px; height: 60px; }
     .panel-signal { display: none; }
-    .panel-content { max-height: calc(79vh - 72px); padding: 26px 22px 34px; }
-    .panel-content h2 { font-size: 42px; }
+    .panel-content { max-height: calc(82vh - 60px); padding: 24px 20px 34px; }
+    .panel-content h2 { font-size: 34px; }
     .gallery-grid { grid-template-columns: 1fr; }
+    .close-btn { width: 40px; height: 40px; }
+  }
+
+  @media (max-width: 650px) and (orientation: landscape) {
+    .page-panel { width: 94vw; min-height: 88vh; max-height: 88vh; }
+    .panel-content { max-height: calc(88vh - 60px); }
+    .core-hit { width: 40vh; }
+    .core-hint { top: calc(50% + 20vh); }
+    .kicker { top: 20vh; }
+    .micro-copy { bottom: 12vh; }
+    .menu-dock { bottom: 4vh; }
   }
 </style>
 </head>

@@ -1340,6 +1340,15 @@
     ctx.fillStyle = grad;
     ctx.beginPath(); ctx.arc(cx, cy, radius*1.9, 0, Math.PI*2); ctx.fill();
 
+    if (ringPulse > .02) {
+      const blue = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * (1.1 + ringPulse * .5));
+      blue.addColorStop(0, `rgba(100, 170, 255, ${.5 * ringPulse})`);
+      blue.addColorStop(.35, `rgba(100, 170, 255, ${.22 * ringPulse})`);
+      blue.addColorStop(1, 'rgba(100, 170, 255, 0)');
+      ctx.fillStyle = blue;
+      ctx.beginPath(); ctx.arc(cx, cy, radius * (1.1 + ringPulse * .5), 0, Math.PI*2); ctx.fill();
+    }
+
     ctx.save();
     ctx.translate(cx, cy);
     rings.forEach((ring, idx) => {

@@ -478,7 +478,7 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    transform: scale(.96);
+    transform: scale(.06);
     transform-origin: var(--origin-x) var(--origin-y);
     opacity: 0;
     pointer-events: none;
@@ -490,11 +490,11 @@
     backdrop-filter: blur(30px) saturate(1.1);
     box-shadow: none;
     overflow: hidden;
-    filter: blur(10px);
+    filter: blur(14px);
     transition:
-      opacity .3s ease,
-      transform .6s var(--ease-out),
-      filter .48s ease;
+      opacity .28s ease,
+      transform .62s cubic-bezier(.16, 1, .3, 1),
+      filter .5s ease;
   }
 
   .page-panel.open {
@@ -601,19 +601,26 @@
     overflow: auto;
   }
 
-  .panel-anim {
+  .panel-anim > *:not(.gallery-grid) {
     opacity: 0;
-    transform: translateY(26px);
-    transition: opacity .45s ease, transform .68s var(--ease-out);
+    translate: 0 22px;
+    transition: opacity .5s ease, translate .66s var(--ease-out);
   }
 
-  .page-panel.open .panel-anim {
+  .page-panel.open .panel-anim > *:not(.gallery-grid) {
     opacity: 1;
-    transform: translateY(0);
+    translate: 0 0;
   }
 
-  .page-panel.open .panel-content > *:nth-child(1) { transition-delay: .14s; }
-  .page-panel.open .panel-content > *:nth-child(2) { transition-delay: .22s; }
+  .page-panel.open .panel-anim > *:nth-child(1) { transition-delay: .08s; }
+  .page-panel.open .panel-anim > *:nth-child(2) { transition-delay: .16s; }
+  .page-panel.open .panel-anim > *:nth-child(3) { transition-delay: .24s; }
+  .page-panel.open .panel-anim > *:nth-child(4) { transition-delay: .32s; }
+  .page-panel.open .panel-anim > *:nth-child(5) { transition-delay: .4s; }
+  .page-panel.open .panel-content > .panel-anim:nth-child(2) > *:nth-child(1) { transition-delay: .2s; }
+  .page-panel.open .panel-content > .panel-anim:nth-child(2) > *:nth-child(2) { transition-delay: .28s; }
+  .page-panel.open .panel-content > .panel-anim:nth-child(2) > *:nth-child(3) { transition-delay: .36s; }
+  .page-panel.open .panel-content > .panel-anim:nth-child(2) > *:nth-child(4) { transition-delay: .44s; }
 
   .eyebrow {
     color: var(--accent);
@@ -726,8 +733,25 @@
     overflow: hidden;
     display: grid;
     grid-template-rows: auto 1fr;
-    transition: border-color .3s ease, box-shadow .3s ease, transform .3s ease;
+    cursor: pointer;
+    opacity: 0;
+    translate: 0 16px;
+    transition:
+      opacity .5s ease,
+      translate .6s var(--ease-out),
+      border-color .3s ease,
+      box-shadow .3s ease,
+      transform .3s ease;
   }
+
+  .page-panel.open .gallery-card {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .page-panel.open .gallery-card:nth-child(1) { transition-delay: .18s; }
+  .page-panel.open .gallery-card:nth-child(2) { transition-delay: .26s; }
+  .page-panel.open .gallery-card:nth-child(3) { transition-delay: .34s; }
+  .page-panel.open .gallery-card:nth-child(4) { transition-delay: .42s; }
 
   .gallery-card:hover {
     border-color: rgba(113,255,215,.4);
@@ -814,6 +838,66 @@
     animation: load 1.1s ease-in-out infinite;
   }
 
+  .lightbox {
+    position: fixed;
+    z-index: 60;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: rgba(3, 5, 6, .92);
+    backdrop-filter: blur(18px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .4s ease, visibility .4s ease;
+  }
+  .lightbox.open { opacity: 1; visibility: visible; }
+  .lightbox-stage {
+    margin: 0;
+    max-width: 92vw;
+    max-height: 88vh;
+    display: grid;
+    gap: 16px;
+    justify-items: center;
+  }
+  .lightbox-stage img {
+    max-width: 92vw;
+    max-height: 78vh;
+    object-fit: contain;
+    border: 1px solid rgba(196,255,244,.18);
+    border-radius: 12px;
+    box-shadow: 0 30px 90px rgba(0,0,0,.6), 0 0 60px rgba(113,255,215,.06);
+    transform: scale(.96);
+    transition: transform .4s var(--ease-out);
+  }
+  .lightbox.open .lightbox-stage img { transform: scale(1); }
+  .lightbox-stage figcaption {
+    color: #9fb0ad;
+    font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  .lightbox-close, .lightbox-prev, .lightbox-next {
+    position: absolute;
+    z-index: 2;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid rgba(196,255,244,.16);
+    background: rgba(10,14,16,.6);
+    color: #cbd4d3;
+    font-size: 22px;
+    cursor: pointer;
+    transition: .25s ease;
+  }
+  .lightbox-close { top: 24px; right: 24px; }
+  .lightbox-prev { left: 24px; top: 50%; transform: translateY(-50%); }
+  .lightbox-next { right: 24px; top: 50%; transform: translateY(-50%); }
+  .lightbox-close:hover, .lightbox-prev:hover, .lightbox-next:hover {
+    color: var(--accent);
+    border-color: rgba(113,255,215,.5);
+    box-shadow: 0 0 20px rgba(113,255,215,.1);
+  }
+
   @keyframes load { from { transform: translateX(-120%); } to { transform: translateX(320%); } }
   @keyframes blink { 50% { opacity: .35; transform: scale(.75); } }
 
@@ -895,7 +979,7 @@
 
   <div class="hero-copy">
     <div class="kicker left">01. AI SYSTEMS · DIGITAL ENGINEERING</div>
-    <div class="kicker right">02. ВОЛГОГРАД · НА СВЯЗИ</div>
+    <div class="kicker right">02. VOLGOGRAD · ONLINE</div>
     <div class="headline left">Интеллект.<br>Инфраструктура.</div>
     <div class="headline right">Результат.</div>
     <div class="micro-copy left">03. AI AGENTS / PRIVATE AI / AUTOMATION</div>
@@ -903,16 +987,16 @@
   </div>
 
   <button class="core-hit" id="coreHit" aria-label="Открыть интерфейс"></button>
-  <div class="core-hint" id="coreHint">[ нажмите на ядро, чтобы открыть разделы ]</div>
+  <div class="core-hint" id="coreHint">[ tap the core to unlock sections ]</div>
 
   <div class="menu-dock" id="menuDock">
     <div class="menu-caption">sections unlocked</div>
     <nav class="menu" aria-label="Навигация">
-      <button data-page="about">Системы</button>
-      <button data-page="services">Архитектура</button>
-      <button data-page="projects">Процесс</button>
-      <button data-page="gallery">Галерея</button>
-      <button data-page="contact">Контакт</button>
+      <button data-page="about">Systems</button>
+      <button data-page="services">Architecture</button>
+      <button data-page="projects">Process</button>
+      <button data-page="gallery">Gallery</button>
+      <button data-page="contact">Contact</button>
     </nav>
   </div>
 
@@ -922,13 +1006,13 @@
     <section class="page-panel" data-panel="about">
       <div class="panel-top">
         <span class="panel-index">01</span>
-        <span class="panel-title">VLG Code / Системы</span>
+        <span class="panel-title">Systems</span>
         <span class="panel-signal">live node</span>
         <button class="close-btn" aria-label="Закрыть">×</button>
       </div>
       <div class="panel-content">
         <div class="panel-anim">
-          <div class="eyebrow">01 / Системы</div>
+          <div class="eyebrow">01 / SYSTEMS</div>
           <h2>Не набор инструментов. Цельная цифровая среда.</h2>
           <p>Технология должна сокращать ручную работу, соединять данные и помогать принимать решения. Поэтому проектируется не просто красивый экран, а рабочая система с понятной логикой, доступом к данным и конкретным результатом для бизнеса или продукта.</p>
           <div class="summary-list">
@@ -949,13 +1033,13 @@
     <section class="page-panel" data-panel="services">
       <div class="panel-top">
         <span class="panel-index">02</span>
-        <span class="panel-title">Architecture first</span>
+        <span class="panel-title">Architecture</span>
         <span class="panel-signal">system map</span>
         <button class="close-btn" aria-label="Закрыть">×</button>
       </div>
       <div class="panel-content">
         <div class="panel-anim">
-          <div class="eyebrow">02 / Архитектура</div>
+          <div class="eyebrow">02 / ARCHITECTURE</div>
           <h2>От запроса — к работающему контуру.</h2>
           <p>Сначала определяется полезный сценарий: где возникает ценность, какие данные участвуют, кто взаимодействует с системой и какой выход должен быть на выходе. Только после этого строится интерфейс, сервисный слой и маршрут автоматизации.</p>
           <div class="summary-list">
@@ -975,13 +1059,13 @@
     <section class="page-panel" data-panel="projects">
       <div class="panel-top">
         <span class="panel-index">03</span>
-        <span class="panel-title">Процесс</span>
+        <span class="panel-title">Process</span>
         <span class="panel-signal">workflow</span>
         <button class="close-btn" aria-label="Закрыть">×</button>
       </div>
       <div class="panel-content">
         <div class="panel-anim">
-          <div class="eyebrow">03 / Процесс</div>
+          <div class="eyebrow">03 / PROCESS</div>
           <h2>Понятный маршрут. Без чёрного ящика.</h2>
           <p>Объём, сроки и стоимость определяются после разбора задачи. Каждый этап имеет проверяемый результат: сначала диагностика, затем архитектура, затем сборка и запуск. Это помогает не терять время и не раздувать ненужный функционал.</p>
           <div class="summary-list">
@@ -1003,13 +1087,13 @@
     <section class="page-panel" data-panel="gallery">
       <div class="panel-top">
         <span class="panel-index">04</span>
-        <span class="panel-title">Галерея</span>
+        <span class="panel-title">Gallery</span>
         <span class="panel-signal">visual slots</span>
         <button class="close-btn" aria-label="Закрыть">×</button>
       </div>
       <div class="panel-content">
         <div class="panel-anim">
-          <div class="eyebrow">04 / Галерея</div>
+          <div class="eyebrow">04 / GALLERY</div>
           <h2>Визуальные кейсы VLG Code.</h2>
           <p>Подборка концептов и интерфейсных экранов системы: ядро, архитектура, модули и рабочие контуры. Каждое изображение — отдельный слой визуального языка проекта.</p>
           <div class="summary-list">
@@ -1043,13 +1127,13 @@
     <section class="page-panel" data-panel="contact">
       <div class="panel-top">
         <span class="panel-index">05</span>
-        <span class="panel-title">Start a system</span>
+        <span class="panel-title">Contact</span>
         <span class="panel-signal">contact node</span>
         <button class="close-btn" aria-label="Закрыть">×</button>
       </div>
       <div class="panel-content">
         <div class="panel-anim">
-          <div class="eyebrow">05 / Контакт</div>
+          <div class="eyebrow">05 / CONTACT</div>
           <h2>Давайте соберём вашу систему.</h2>
           <p>Опишите задачу простыми словами. На первом контакте можно быстро определить, какой формат решения подойдёт, какие данные понадобятся и каким может быть рабочий контур. Для связи на сайте оставлена только электронная почта.</p>
           <div class="summary-list">
@@ -1062,6 +1146,16 @@
         </div>
       </div>
     </section>
+  </div>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Просмотр изображения">
+    <button class="lightbox-close" aria-label="Закрыть">×</button>
+    <button class="lightbox-prev" aria-label="Предыдущее">‹</button>
+    <button class="lightbox-next" aria-label="Следующее">›</button>
+    <figure class="lightbox-stage">
+      <img id="lightboxImg" src="" alt="" />
+      <figcaption id="lightboxCaption"></figcaption>
+    </figure>
   </div>
 
   <div class="boot" id="boot">
@@ -1086,6 +1180,9 @@
   const boot = document.getElementById('boot');
   const panelLayer = document.getElementById('panelLayer');
   const panelBackdrop = document.getElementById('panelBackdrop');
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxCaption = document.getElementById('lightboxCaption');
 
   let W = 0, H = 0, cx = 0, cy = 0;
   let t = 0;
@@ -1312,7 +1409,7 @@
     if (interfaceAwake) return;
     interfaceAwake = true;
     app.classList.add('interface-awake');
-    coreHint.textContent = '[ выберите раздел и откройте окно ]';
+    coreHint.textContent = '[ select a section to open its window ]';
     pulseBoost = 1.2;
     spinBoost = .75;
     statusText.textContent = 'Navigation unlocked';
@@ -1360,7 +1457,7 @@
     } else {
       interfaceAwake = false;
       app.classList.remove('interface-awake');
-      coreHint.textContent = '[ нажмите на ядро, чтобы открыть разделы ]';
+      coreHint.textContent = '[ tap the core to unlock sections ]';
       statusText.textContent = 'VLG core online';
     }
   });
@@ -1369,8 +1466,47 @@
   document.querySelectorAll('.close-btn').forEach(btn => btn.addEventListener('click', closePanels));
   panelBackdrop.addEventListener('click', closePanels);
 
+  // --- Lightbox / gallery ---
+  const galleryCards = [...document.querySelectorAll('.gallery-card')];
+  let lightboxIndex = 0;
+
+  function openLightbox(index) {
+    lightboxIndex = (index + galleryCards.length) % galleryCards.length;
+    const card = galleryCards[lightboxIndex];
+    const img = card.querySelector('img');
+    const strong = card.querySelector('strong');
+    const p = card.querySelector('p');
+    lightboxImg.src = img.src;
+    lightboxImg.alt = img.alt;
+    lightboxCaption.textContent = `${strong ? strong.textContent : ''} — ${p ? p.textContent : ''}`;
+    lightbox.classList.add('open');
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+  }
+
+  function stepLightbox(dir) {
+    openLightbox(lightboxIndex + dir);
+  }
+
+  galleryCards.forEach((card, i) => {
+    card.addEventListener('click', () => openLightbox(i));
+  });
+  document.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
+  document.querySelector('.lightbox-prev').addEventListener('click', () => stepLightbox(-1));
+  document.querySelector('.lightbox-next').addEventListener('click', () => stepLightbox(1));
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) closeLightbox();
+  });
+
   addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closePanels();
+    if (lightbox.classList.contains('open')) {
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') stepLightbox(-1);
+      if (e.key === 'ArrowRight') stepLightbox(1);
+    }
   });
 
   document.getElementById('langBtn').addEventListener('click', (e) => {

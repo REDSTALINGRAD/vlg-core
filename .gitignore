@@ -1,0 +1,7 @@
+# Исходные PNG (используются сжатые WebP-версии)
+fon/*.png
+galary/*.png
+
+# Системные файлы
+.DS_Store
+Thumbs.db

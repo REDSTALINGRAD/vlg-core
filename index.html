@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VLG Code — AI Systems & Digital Engineering</title>
+<style>
+  :root {
+    --bg: #050708;
+    --panel: rgba(10, 14, 16, 0.84);
+    --panel-soft: rgba(10, 15, 18, 0.62);
+    --line: rgba(196, 255, 244, 0.14);
+    --line-strong: rgba(196, 255, 244, 0.28);
+    --text: #dce4e3;
+    --muted: #7e8b8a;
+    --accent: #71ffd7;
+    --accent2: #64aaff;
+    --radius: 22px;
+    --ease-out: cubic-bezier(.18,.86,.22,1);
+    --ease-soft: cubic-bezier(.2,.74,.16,1);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 50% 45%, rgba(93, 255, 217, 0.05), transparent 34%),
+      radial-gradient(circle at 50% 100%, rgba(63, 116, 128, 0.08), transparent 40%),
+      #050708;
+  }
+
+  .app {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    isolation: isolate;
+  }
+
+  #scene,
+  #codeRain,
+  .noise,
+  .vignette,
+  .grid,
+  .scanlines,
+  .panel-backdrop {
+    position: absolute;
+    inset: 0;
+  }
+
+  #scene { z-index: 3; cursor: default; }
+  #codeRain { z-index: 1; pointer-events: none; }
+
+  .bg-image {
+    z-index: 0;
+    pointer-events: none;
+    background-image: url('fon/fon.webp');
+    background-size: cover;
+    background-position: center;
+    opacity: .18;
+    filter: saturate(.92) brightness(.92);
+    mask-image: radial-gradient(circle at center, #000 26%, rgba(0,0,0,.55) 68%, transparent 100%);
+  }
+
+  .grid {
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(154, 185, 184, 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(154, 185, 184, 0.055) 1px, transparent 1px),
+      linear-gradient(rgba(154, 185, 184, 0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(154, 185, 184, 0.018) 1px, transparent 1px);
+    background-size: 86px 86px, 86px 86px, 17px 17px, 17px 17px;
+    mask-image: radial-gradient(circle at center, #000 18%, rgba(0,0,0,.8) 58%, transparent 100%);
+  }
+
+  .scanlines {
+    z-index: 7;
+    pointer-events: none;
+    opacity: .17;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,.03),
+      rgba(255,255,255,.03) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+    mix-blend-mode: soft-light;
+  }
+
+  .noise {
+    z-index: 8;
+    pointer-events: none;
+    opacity: .08;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+  }
+
+  .vignette {
+    z-index: 6;
+    pointer-events: none;
+    box-shadow: inset 0 0 170px rgba(0,0,0,.92);
+  }
+
+  .hud-frame {
+    position: absolute;
+    z-index: 5;
+    left: 5.8vw;
+    right: 5.8vw;
+    top: 7.2vh;
+    bottom: 7.2vh;
+    border: 1px solid rgba(191, 229, 223, .18);
+    border-radius: 15px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.02) inset,
+      0 24px 80px rgba(0,0,0,.4);
+    pointer-events: none;
+  }
+
+  .hud-frame::before,
+  .hud-frame::after {
+    content: "";
+    position: absolute;
+    background: rgba(195, 235, 229, .1);
+  }
+
+  .hud-frame::before { left: 0; right: 0; top: 14.5%; height: 1px; }
+  .hud-frame::after { top: 0; bottom: 0; left: 50%; width: 1px; opacity: .45; }
+
+  .topbar {
+    position: absolute;
+    z-index: 11;
+    top: 8.6vh;
+    left: 9.4vw;
+    right: 9.4vw;
+    height: 62px;
+    display: flex;
+    align-items: stretch;
+    pointer-events: auto;
+  }
+
+  .brand,
+  .micro-btn {
+    border: 1px solid var(--line);
+    background: rgba(6, 9, 11, .32);
+    backdrop-filter: blur(12px);
+  }
+
+  .brand {
+    min-width: 178px;
+    padding: 0 26px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: -.04em;
+    font-size: 16px;
+    text-transform: uppercase;
+  }
+
+  .brand .accent { color: var(--accent); }
+  .brand small { color: #90a09e; font-size: 10px; letter-spacing: .16em; margin-left: 8px; }
+  .top-spacer { flex: 1; border-top: 1px solid rgba(196,255,244,.06); border-bottom: 1px solid rgba(196,255,244,.06); }
+
+  .micro-btn {
+    width: 74px;
+    display: grid;
+    place-items: center;
+    color: #aeb9b7;
+    font-size: 12px;
+    cursor: pointer;
+    transition: .25s ease;
+  }
+  .micro-btn:hover { color: var(--accent); background: rgba(113,255,215,.06); }
+
+  .status {
+    position: absolute;
+    z-index: 11;
+    left: 50%;
+    top: 11.2vh;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font: 9px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: #74807f;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    pointer-events: none;
+    text-shadow: 0 0 12px rgba(113,255,215,.10);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 14px var(--accent);
+    animation: blink 1.8s ease-in-out infinite;
+  }
+
+  .hero-copy {
+    position: absolute;
+    z-index: 9;
+    inset: 0;
+    pointer-events: none;
+    transition: opacity .7s var(--ease-soft), transform .8s var(--ease-soft), filter .7s ease;
+  }
+
+  .app.interface-awake .hero-copy {
+    opacity: .42;
+    transform: scale(.985);
+    filter: blur(1px);
+  }
+
+  .kicker {
+    position: absolute;
+    top: 31.2vh;
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #a8b1b0;
+    letter-spacing: .08em;
+  }
+  .kicker.left { left: 13.4vw; }
+  .kicker.right { right: 13.5vw; text-align: right; }
+
+  .headline {
+    position: absolute;
+    top: 45.5vh;
+    width: 27vw;
+    font-weight: 300;
+    text-transform: uppercase;
+    letter-spacing: -.02em;
+    font-size: clamp(28px, 2.5vw, 56px);
+    line-height: 1.12;
+    color: rgba(225, 233, 232, .86);
+    text-shadow: 0 0 28px rgba(255,255,255,.025);
+  }
+  .headline.left { left: 15vw; text-align: left; }
+  .headline.right { right: 14.8vw; text-align: right; }
+
+  .micro-copy {
+    position: absolute;
+    bottom: 19.3vh;
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #939d9c;
+    letter-spacing: .08em;
+  }
+  .micro-copy.left { left: 13.4vw; }
+  .micro-copy.right { right: 13.5vw; text-align: right; }
+
+  .core-hint {
+    position: absolute;
+    z-index: 10;
+    left: 50%;
+    top: calc(50% + min(24vw, 210px));
+    transform: translate(-50%, 0);
+    width: max-content;
+    max-width: 80vw;
+    color: rgba(201, 214, 211, .55);
+    letter-spacing: .16em;
+    font-size: 10px;
+    text-transform: uppercase;
+    pointer-events: none;
+    text-align: center;
+    transition: opacity .35s ease, transform .55s var(--ease-soft), color .35s ease;
+  }
+  .app.interface-awake .core-hint {
+    color: rgba(196, 255, 244, .72);
+    transform: translate(-50%, 12px);
+  }
+
+  .core-hit {
+    position: absolute;
+    z-index: 12;
+    left: 50%;
+    top: 50%;
+    width: min(34vw, 430px);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    outline: none;
+  }
+
+  .core-hit::before,
+  .core-hit::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    transition: .35s ease;
+    pointer-events: none;
+  }
+
+  .core-hit::before {
+    inset: 16%;
+    border: 1px solid rgba(113,255,215,.0);
+    box-shadow: 0 0 0 rgba(113,255,215,.0);
+  }
+
+  .core-hit::after {
+    inset: 3%;
+    border: 1px dashed rgba(113,255,215,.0);
+    transform: scale(.92);
+  }
+
+  .core-hit:hover::before,
+  .core-hit:focus-visible::before,
+  .app.interface-awake .core-hit::before {
+    border-color: rgba(113,255,215,.24);
+    box-shadow: 0 0 48px rgba(113,255,215,.08) inset;
+  }
+
+  .core-hit:hover::after,
+  .app.interface-awake .core-hit::after {
+    border-color: rgba(113,255,215,.16);
+    transform: scale(1);
+  }
+
+  .menu-dock {
+    position: absolute;
+    z-index: 14;
+    left: 50%;
+    bottom: 8.7vh;
+    transform: translateX(-50%);
+    display: grid;
+    gap: 12px;
+    justify-items: center;
+    pointer-events: none;
+    opacity: 0;
+    filter: blur(10px);
+    transition: opacity .65s var(--ease-out), transform .8s var(--ease-out), filter .65s ease;
+  }
+
+  .menu-dock::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: min(74vw, 780px);
+    height: 72px;
+    transform: translate(-50%, -22%);
+    background: radial-gradient(circle at center, rgba(113,255,215,.075), transparent 64%);
+    filter: blur(16px);
+    pointer-events: none;
+    opacity: .85;
+  }
+
+  .app.interface-awake .menu-dock {
+    opacity: 1;
+    filter: blur(0px);
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .menu-caption {
+    position: relative;
+    z-index: 1;
+    color: #83908e;
+    font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+
+  .menu {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .menu button {
+    appearance: none;
+    border: 1px solid rgba(196,255,244,.12);
+    background: linear-gradient(180deg, rgba(10,14,16,.72), rgba(6,9,10,.5));
+    box-shadow:
+      0 10px 30px rgba(0,0,0,.18),
+      0 0 0 1px rgba(255,255,255,.014) inset;
+    color: #899694;
+    min-width: 112px;
+    padding: 11px 16px;
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    backdrop-filter: blur(16px);
+    transform: translateY(18px) scale(.96);
+    opacity: 0;
+    transition:
+      color .25s ease,
+      border-color .25s ease,
+      background .25s ease,
+      box-shadow .25s ease,
+      transform .5s var(--ease-out),
+      opacity .45s ease;
+  }
+
+  .app.interface-awake .menu button {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .menu button:nth-child(1) { transition-delay: .05s; }
+  .menu button:nth-child(2) { transition-delay: .1s; }
+  .menu button:nth-child(3) { transition-delay: .15s; }
+  .menu button:nth-child(4) { transition-delay: .2s; }
+  .menu button:nth-child(5) { transition-delay: .25s; }
+
+  .menu button:hover,
+  .menu button.active {
+    color: var(--accent);
+    border-color: rgba(113,255,215,.34);
+    background: linear-gradient(180deg, rgba(12,18,20,.86), rgba(8,12,14,.65));
+    box-shadow:
+      0 14px 40px rgba(0,0,0,.24),
+      0 0 24px rgba(113,255,215,.08),
+      0 0 0 1px rgba(255,255,255,.014) inset;
+  }
+
+  .panel-layer {
+    position: absolute;
+    z-index: 18;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .panel-layer.active {
+    pointer-events: auto;
+  }
+
+  .panel-backdrop {
+    background: radial-gradient(circle at center, rgba(5,8,9,.12), rgba(5,8,9,.58));
+    backdrop-filter: blur(5px);
+    opacity: 0;
+    transition: opacity .45s ease;
+    pointer-events: none;
+  }
+
+  .panel-layer.active .panel-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .page-panel {
+    --origin-x: 50%;
+    --origin-y: 50%;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: min(980px, 84vw);
+    min-height: min(620px, 74vh);
+    max-height: 76vh;
+    transform: translate(-50%, -50%) scale(.84) translateY(20px);
+    transform-origin: var(--origin-x) var(--origin-y);
+    opacity: 0;
+    pointer-events: none;
+    border: 1px solid rgba(181, 234, 226, .18);
+    border-radius: var(--radius);
+    background:
+      linear-gradient(180deg, rgba(10,15,17,.92), rgba(7,10,12,.83)),
+      rgba(7, 11, 13, .76);
+    backdrop-filter: blur(30px) saturate(1.1);
+    box-shadow:
+      0 32px 130px rgba(0,0,0,.72),
+      0 0 0 1px rgba(255,255,255,.018) inset,
+      0 0 90px rgba(113,255,215,.055);
+    overflow: hidden;
+    clip-path: inset(7% 10% 7% 10% round 26px);
+    filter: blur(10px);
+    transition:
+      opacity .3s ease,
+      transform .72s var(--ease-out),
+      clip-path .72s var(--ease-out),
+      filter .48s ease;
+  }
+
+  .page-panel.open {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) translateY(0);
+    clip-path: inset(0 0 0 0 round 22px);
+    filter: blur(0px);
+    pointer-events: auto;
+  }
+
+  .page-panel::before,
+  .page-panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .page-panel::before {
+    background-image:
+      linear-gradient(rgba(196,255,244,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(196,255,244,.035) 1px, transparent 1px);
+    background-size: 46px 46px;
+  }
+
+  .page-panel::after {
+    background:
+      radial-gradient(circle at 16% 0%, rgba(113,255,215,.07), transparent 36%),
+      radial-gradient(circle at 100% 10%, rgba(100,170,255,.06), transparent 30%);
+  }
+
+  .panel-top {
+    position: relative;
+    z-index: 2;
+    height: 72px;
+    padding: 0 22px 0 28px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    border-bottom: 1px solid rgba(196,255,244,.10);
+    background: linear-gradient(180deg, rgba(255,255,255,.025), transparent);
+  }
+
+  .panel-index {
+    font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--accent);
+    letter-spacing: .12em;
+    text-shadow: 0 0 12px rgba(113,255,215,.10);
+  }
+
+  .panel-title {
+    flex: 1;
+    font-size: 12px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #cbd4d3;
+  }
+
+  .panel-signal {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-right: 8px;
+    color: #81908d;
+    font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .panel-signal::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 14px rgba(113,255,215,.8);
+    animation: blink 1.9s ease-in-out infinite;
+  }
+
+  .close-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid rgba(196,255,244,.14);
+    color: #b8c1c0;
+    background: rgba(255,255,255,.015);
+    cursor: pointer;
+    transition: .25s ease;
+  }
+  .close-btn:hover {
+    color: #fff;
+    border-color: rgba(113,255,215,.5);
+    box-shadow: 0 0 18px rgba(113,255,215,.08);
+    transform: rotate(90deg);
+  }
+
+  .panel-content {
+    position: relative;
+    z-index: 2;
+    min-height: calc(100% - 72px);
+    max-height: calc(76vh - 72px);
+    padding: clamp(28px, 4vw, 52px);
+    display: grid;
+    grid-template-columns: 1.12fr .88fr;
+    gap: clamp(24px, 4vw, 56px);
+    overflow: auto;
+  }
+
+  .panel-anim {
+    opacity: 0;
+    transform: translateY(26px);
+    transition: opacity .45s ease, transform .68s var(--ease-out);
+  }
+
+  .page-panel.open .panel-anim {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .page-panel.open .panel-content > *:nth-child(1) { transition-delay: .14s; }
+  .page-panel.open .panel-content > *:nth-child(2) { transition-delay: .22s; }
+
+  .eyebrow {
+    color: var(--accent);
+    font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    text-shadow: 0 0 12px rgba(113,255,215,.10);
+  }
+
+  .panel-content h2 {
+    margin: 0 0 18px;
+    max-width: 680px;
+    font-weight: 300;
+    font-size: clamp(34px, 5vw, 74px);
+    line-height: .98;
+    letter-spacing: -.055em;
+  }
+
+  .panel-content p {
+    max-width: 680px;
+    color: #9aa7a5;
+    font-size: 14px;
+    line-height: 1.78;
+    margin: 0;
+  }
+
+  .summary-list {
+    display: grid;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .summary-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: 12px 14px;
+    border: 1px solid rgba(196,255,244,.08);
+    border-radius: 14px;
+    background: rgba(255,255,255,.015);
+  }
+
+  .summary-item .tag {
+    min-width: 72px;
+    color: #74817f;
+    font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
+  .summary-item .text {
+    color: #d5dcdb;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .metrics {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+  }
+
+  .metric {
+    min-height: 88px;
+    border: 1px solid rgba(196,255,244,.10);
+    border-radius: 16px;
+    padding: 16px 16px 18px;
+    display: grid;
+    gap: 10px;
+    background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.008));
+    box-shadow: 0 8px 24px rgba(0,0,0,.16);
+  }
+
+  .metric span:first-child {
+    color: #6f7f7d;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+  }
+
+  .metric strong {
+    font-weight: 400;
+    font-size: 15px;
+    color: #d5dcdb;
+    line-height: 1.45;
+  }
+
+  .metric small {
+    color: #8d9997;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .gallery-card {
+    margin: 0;
+    min-height: 138px;
+    border: 1px solid rgba(196,255,244,.16);
+    border-radius: 18px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.018), rgba(255,255,255,.006)),
+      rgba(8,12,14,.38);
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    transition: border-color .3s ease, box-shadow .3s ease, transform .3s ease;
+  }
+
+  .gallery-card:hover {
+    border-color: rgba(113,255,215,.4);
+    box-shadow: 0 0 34px rgba(113,255,215,.10);
+    transform: translateY(-3px);
+  }
+
+  .gallery-card img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    background: #050708;
+  }
+
+  .gallery-card figcaption {
+    padding: 16px 18px 18px;
+    display: grid;
+    align-content: start;
+    gap: 8px;
+  }
+
+  .gallery-card .slot {
+    color: #768381;
+    font: 10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  .gallery-card strong {
+    font-size: 15px;
+    font-weight: 500;
+    color: #d5dcdb;
+  }
+
+  .gallery-card p {
+    margin: 0;
+    color: #84908e;
+    font-size: 12px;
+    line-height: 1.65;
+  }
+
+  .email-link {
+    color: #dce4e3;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(113,255,215,.28);
+    transition: .2s ease;
+  }
+  .email-link:hover {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    text-shadow: 0 0 18px rgba(113,255,215,.24);
+  }
+
+  .boot {
+    position: absolute;
+    z-index: 40;
+    inset: 0;
+    background: #040607;
+    display: grid;
+    place-items: center;
+    transition: opacity 1s ease, visibility 1s ease;
+  }
+  .boot.hidden { opacity: 0; visibility: hidden; }
+  .boot-box {
+    width: min(520px, 82vw);
+    color: #84918f;
+    font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .08em;
+    text-shadow: 0 0 12px rgba(113,255,215,.10);
+  }
+  .boot-line {
+    height: 1px;
+    background: rgba(196,255,244,.12);
+    overflow: hidden;
+    margin-top: 14px;
+  }
+  .boot-line::after {
+    content: "";
+    display: block;
+    height: 100%;
+    width: 42%;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    animation: load 1.1s ease-in-out infinite;
+  }
+
+  @keyframes load { from { transform: translateX(-120%); } to { transform: translateX(320%); } }
+  @keyframes blink { 50% { opacity: .35; transform: scale(.75); } }
+
+  @media (max-width: 1024px) {
+    .panel-content { grid-template-columns: 1fr; }
+    .metrics { align-content: start; }
+  }
+
+  @media (max-width: 900px) {
+    .headline { width: 31vw; font-size: clamp(20px, 4vw, 34px); }
+    .kicker.left, .micro-copy.left { left: 9vw; }
+    .kicker.right, .micro-copy.right { right: 9vw; }
+    .headline.left { left: 9vw; }
+    .headline.right { right: 9vw; }
+  }
+
+  @media (max-width: 650px) {
+    .hud-frame { left: 3vw; right: 3vw; top: 3vh; bottom: 3vh; }
+    .topbar { top: 4.2vh; left: 6vw; right: 6vw; }
+    .brand { min-width: 132px; padding: 0 15px; font-size: 13px; }
+    .brand small { display: none; }
+    .micro-btn { width: 52px; }
+    .headline { display: none; }
+    .kicker { top: 26vh; }
+    .micro-copy { bottom: 17vh; }
+    .core-hit { width: 66vw; }
+    .core-hint { top: calc(50% + 34vw); }
+    .menu-dock { bottom: 5.7vh; width: 90vw; }
+    .menu { width: 100%; overflow-x: auto; justify-content: flex-start; padding-bottom: 4px; scrollbar-width: none; flex-wrap: nowrap; }
+    .menu::-webkit-scrollbar { display: none; }
+    .menu button { min-width: 114px; }
+    .page-panel { width: 92vw; min-height: 79vh; max-height: 79vh; }
+    .panel-top { padding: 0 16px 0 18px; }
+    .panel-signal { display: none; }
+    .panel-content { max-height: calc(79vh - 72px); padding: 26px 22px 34px; }
+    .panel-content h2 { font-size: 42px; }
+    .gallery-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <canvas id="codeRain"></canvas>
+  <canvas id="scene"></canvas>
+  <div class="bg-image"></div>
+  <div class="grid"></div>
+  <div class="hud-frame"></div>
+  <div class="scanlines"></div>
+  <div class="noise"></div>
+  <div class="vignette"></div>
+
+  <div class="topbar">
+    <div class="brand"><span class="accent">VLG</span>// CODE <small>V2.1</small></div>
+    <div class="top-spacer"></div>
+    <button class="micro-btn" id="langBtn" aria-label="Сменить язык">RU</button>
+    <button class="micro-btn" id="timeBtn" aria-label="Локальное время">--:--</button>
+  </div>
+
+  <div class="status"><span class="status-dot"></span><span id="statusText">VLG core online</span></div>
+
+  <div class="hero-copy">
+    <div class="kicker left">01. AI SYSTEMS · DIGITAL ENGINEERING</div>
+    <div class="kicker right">02. ВОЛГОГРАД · НА СВЯЗИ</div>
+    <div class="headline left">Интеллект.<br>Инфраструктура.</div>
+    <div class="headline right">Результат.</div>
+    <div class="micro-copy left">03. AI AGENTS / PRIVATE AI / AUTOMATION</div>
+    <div class="micro-copy right">04. WEB ENGINEERING / SECURE ACCESS</div>
+  </div>
+
+  <button class="core-hit" id="coreHit" aria-label="Открыть интерфейс"></button>
+  <div class="core-hint" id="coreHint">[ нажмите на ядро, чтобы открыть разделы ]</div>
+
+  <div class="menu-dock" id="menuDock">
+    <div class="menu-caption">sections unlocked</div>
+    <nav class="menu" aria-label="Навигация">
+      <button data-page="about">Системы</button>
+      <button data-page="services">Архитектура</button>
+      <button data-page="projects">Процесс</button>
+      <button data-page="gallery">Галерея</button>
+      <button data-page="contact">Контакт</button>
+    </nav>
+  </div>
+
+  <div class="panel-layer" id="panelLayer">
+    <div class="panel-backdrop" id="panelBackdrop"></div>
+
+    <section class="page-panel" data-panel="about">
+      <div class="panel-top">
+        <span class="panel-index">01</span>
+        <span class="panel-title">VLG Code / Системы</span>
+        <span class="panel-signal">live node</span>
+        <button class="close-btn" aria-label="Закрыть">×</button>
+      </div>
+      <div class="panel-content">
+        <div class="panel-anim">
+          <div class="eyebrow">01 / Системы</div>
+          <h2>Не набор инструментов. Цельная цифровая среда.</h2>
+          <p>Технология должна сокращать ручную работу, соединять данные и помогать принимать решения. Поэтому проектируется не просто красивый экран, а рабочая система с понятной логикой, доступом к данным и конкретным результатом для бизнеса или продукта.</p>
+          <div class="summary-list">
+            <div class="summary-item"><div class="tag">logic</div><div class="text">AI-агенты, автоматизация сценариев и сервисные контуры для реальной задачи.</div></div>
+            <div class="summary-item"><div class="tag">stack</div><div class="text">Локальный и облачный ИИ, интеграции с API, веб-интерфейсы и приватные контуры доступа.</div></div>
+            <div class="summary-item"><div class="tag">result</div><div class="text">Сокращение ручных операций, быстрый доступ к знаниям и масштабируемая архитектура.</div></div>
+          </div>
+        </div>
+        <div class="metrics panel-anim">
+          <div class="metric"><span>01</span><strong>AI-агенты</strong><small>Автономные или полуавтономные сценарии для помощи, анализа и действий.</small></div>
+          <div class="metric"><span>02</span><strong>Автоматизация бизнеса</strong><small>Связка процессов, данных и интерфейсов в один рабочий контур.</small></div>
+          <div class="metric"><span>03</span><strong>Локальный и облачный ИИ</strong><small>Выбор модели и инфраструктуры под приватность, скорость и бюджет.</small></div>
+          <div class="metric"><span>04</span><strong>Web-системы</strong><small>Панели, внутренние кабинеты и сайты с инженерной логикой.</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-panel" data-panel="services">
+      <div class="panel-top">
+        <span class="panel-index">02</span>
+        <span class="panel-title">Architecture first</span>
+        <span class="panel-signal">system map</span>
+        <button class="close-btn" aria-label="Закрыть">×</button>
+      </div>
+      <div class="panel-content">
+        <div class="panel-anim">
+          <div class="eyebrow">02 / Архитектура</div>
+          <h2>От запроса — к работающему контуру.</h2>
+          <p>Сначала определяется полезный сценарий: где возникает ценность, какие данные участвуют, кто взаимодействует с системой и какой выход должен быть на выходе. Только после этого строится интерфейс, сервисный слой и маршрут автоматизации.</p>
+          <div class="summary-list">
+            <div class="summary-item"><div class="tag">input</div><div class="text">Задача, пользовательский поток, данные, ограничения, правила доступа.</div></div>
+            <div class="summary-item"><div class="tag">core</div><div class="text">Модели, память, логика, инструменты, orchestration и контрольный слой.</div></div>
+            <div class="summary-item"><div class="tag">output</div><div class="text">Веб-окно, панель оператора, автоматический агент или API-сервис.</div></div>
+          </div>
+        </div>
+        <div class="metrics panel-anim">
+          <div class="metric"><span>Architecture block</span><strong>Data → Logic → Interface</strong><small>Система строится по прозрачной цепочке, а не по набору разрозненных функций.</small></div>
+          <div class="metric"><span>Security</span><strong>Контроль доступа</strong><small>Разделение ролей, приватные данные и безопасные маршруты обращения к модели.</small></div>
+          <div class="metric"><span>Scalability</span><strong>Масштабирование</strong><small>Возможность позже расширить контур новыми задачами и новыми источниками данных.</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-panel" data-panel="projects">
+      <div class="panel-top">
+        <span class="panel-index">03</span>
+        <span class="panel-title">Процесс</span>
+        <span class="panel-signal">workflow</span>
+        <button class="close-btn" aria-label="Закрыть">×</button>
+      </div>
+      <div class="panel-content">
+        <div class="panel-anim">
+          <div class="eyebrow">03 / Процесс</div>
+          <h2>Понятный маршрут. Без чёрного ящика.</h2>
+          <p>Объём, сроки и стоимость определяются после разбора задачи. Каждый этап имеет проверяемый результат: сначала диагностика, затем архитектура, затем сборка и запуск. Это помогает не терять время и не раздувать ненужный функционал.</p>
+          <div class="summary-list">
+            <div class="summary-item"><div class="tag">step 01</div><div class="text">Диагностика задачи и определение полезного сценария.</div></div>
+            <div class="summary-item"><div class="tag">step 02</div><div class="text">Архитектурная схема, состав модулей и логика доступа.</div></div>
+            <div class="summary-item"><div class="tag">step 03</div><div class="text">Сборка интерфейса, интеграций и AI-ядра.</div></div>
+            <div class="summary-item"><div class="tag">step 04</div><div class="text">Запуск, тестирование и подготовка к развитию системы.</div></div>
+          </div>
+        </div>
+        <div class="metrics panel-anim">
+          <div class="metric"><span>STEP 01</span><strong>Диагностика</strong><small>Фиксируется запрос, контекст, ограничения и конечный ожидаемый эффект.</small></div>
+          <div class="metric"><span>STEP 02</span><strong>Архитектура</strong><small>Определяется система модулей, источников, ролей и интерфейсных узлов.</small></div>
+          <div class="metric"><span>STEP 03</span><strong>Сборка</strong><small>Реализация кода, логики, интеграций и интерфейсной оболочки.</small></div>
+          <div class="metric"><span>STEP 04</span><strong>Запуск</strong><small>Проверка, включение в рабочий процесс и подготовка к дальнейшему росту.</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-panel" data-panel="gallery">
+      <div class="panel-top">
+        <span class="panel-index">04</span>
+        <span class="panel-title">Галерея</span>
+        <span class="panel-signal">visual slots</span>
+        <button class="close-btn" aria-label="Закрыть">×</button>
+      </div>
+      <div class="panel-content">
+        <div class="panel-anim">
+          <div class="eyebrow">04 / Галерея</div>
+          <h2>Визуальные кейсы VLG Code.</h2>
+          <p>Подборка концептов и интерфейсных экранов системы: ядро, архитектура, модули и рабочие контуры. Каждое изображение — отдельный слой визуального языка проекта.</p>
+          <div class="summary-list">
+            <div class="summary-item"><div class="tag">core</div><div class="text">Сфера-ядро и HUD-оболочка — центральный визуальный мотив системы.</div></div>
+            <div class="summary-item"><div class="tag">stack</div><div class="text">Архитектурные схемы, модули и интерфейсные экраны в единой палитре.</div></div>
+          </div>
+        </div>
+        <div class="panel-anim">
+          <div class="gallery-grid">
+            <figure class="gallery-card">
+              <img src="galary/1.webp" alt="VLG Code — ядро системы, HUD-интерфейс" loading="lazy" />
+              <figcaption><div class="slot">case 01</div><strong>Ядро системы</strong><p>Сфера-ядро с HUD-оболочкой и панелями статуса.</p></figcaption>
+            </figure>
+            <figure class="gallery-card">
+              <img src="galary/2.webp" alt="VLG Code — серверная архитектура" loading="lazy" />
+              <figcaption><div class="slot">case 02</div><strong>Архитектура</strong><p>Дата-центр и модульный контур в перспективе.</p></figcaption>
+            </figure>
+            <figure class="gallery-card">
+              <img src="galary/3.webp" alt="VLG Code — схема модулей" loading="lazy" />
+              <figcaption><div class="slot">case 03</div><strong>Модули</strong><p>Схема связей ядра, данных, ИИ и безопасности.</p></figcaption>
+            </figure>
+            <figure class="gallery-card">
+              <img src="galary/4.webp" alt="VLG Code — интерфейсный экран" loading="lazy" />
+              <figcaption><div class="slot">case 04</div><strong>Интерфейс</strong><p>Экран системы с потоками данных и метриками.</p></figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-panel" data-panel="contact">
+      <div class="panel-top">
+        <span class="panel-index">05</span>
+        <span class="panel-title">Start a system</span>
+        <span class="panel-signal">contact node</span>
+        <button class="close-btn" aria-label="Закрыть">×</button>
+      </div>
+      <div class="panel-content">
+        <div class="panel-anim">
+          <div class="eyebrow">05 / Контакт</div>
+          <h2>Давайте соберём вашу систему.</h2>
+          <p>Опишите задачу простыми словами. На первом контакте можно быстро определить, какой формат решения подойдёт, какие данные понадобятся и каким может быть рабочий контур. Для связи на сайте оставлена только электронная почта.</p>
+          <div class="summary-list">
+            <div class="summary-item"><div class="tag">contact</div><div class="text">Отправьте краткое описание задачи, цели и желаемого результата.</div></div>
+            <div class="summary-item"><div class="tag">next</div><div class="text">После первого сообщения можно определить формат решения и следующий шаг.</div></div>
+          </div>
+        </div>
+        <div class="metrics panel-anim">
+          <div class="metric"><span>Email</span><strong><a class="email-link" href="mailto:uteplo369@gmail.com">uteplo369@gmail.com</a></strong><small>Основной канал связи для обсуждения задачи и начала проекта.</small></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="boot" id="boot">
+    <div class="boot-box">
+      <div>INITIALIZING VLG CORE //</div>
+      <div class="boot-line"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const scene = document.getElementById('scene');
+  const ctx = scene.getContext('2d');
+  const codeCanvas = document.getElementById('codeRain');
+  const cctx = codeCanvas.getContext('2d');
+  const app = document.getElementById('app');
+  const coreHit = document.getElementById('coreHit');
+  const coreHint = document.getElementById('coreHint');
+  const statusText = document.getElementById('statusText');
+  const boot = document.getElementById('boot');
+  const panelLayer = document.getElementById('panelLayer');
+  const panelBackdrop = document.getElementById('panelBackdrop');
+
+  let W = 0, H = 0, cx = 0, cy = 0;
+  let t = 0;
+  let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
+  let spinBoost = 0;
+  let pulseBoost = 0;
+  let coreRadius = 180;
+  let reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let interfaceAwake = false;
+
+  const points = [];
+  const POINT_COUNT = reducedMotion ? 560 : 1100;
+  const phi = Math.PI * (3 - Math.sqrt(5));
+
+  for (let i = 0; i < POINT_COUNT; i++) {
+    const y = 1 - (i / (POINT_COUNT - 1)) * 2;
+    const r = Math.sqrt(1 - y * y);
+    const theta = phi * i;
+    const x = Math.cos(theta) * r;
+    const z = Math.sin(theta) * r;
+    points.push({
+      x, y, z,
+      seed: Math.random() * Math.PI * 2,
+      size: 0.35 + Math.random() * 1.2,
+      halo: Math.random() > .86
+    });
+  }
+
+  const rings = Array.from({ length: 4 }, (_, i) => ({
+    tilt: (i * .64) + .2,
+    speed: .11 + i * .018,
+    phase: i * 1.7
+  }));
+
+  const glyphs = [];
+  const glyphPool = [
+    'system: VLG_CORE', 'mode: production_ready', 'inputs: business_data',
+    'inputs: user_context', 'inputs: external_api', 'model: fit_for_task',
+    'memory: controlled', 'tools: connected', 'delivery: web_interface',
+    'delivery: automation_flow', '# ready for implementation',
+    'architecture.first()', 'connect(data, logic)', 'secure_access: true',
+    'AI_SYSTEMS // ACTIVE', 'DIGITAL_ENGINEERING', 'VLG_CORE / ONLINE',
+    'process: diagnose → build → launch', 'gallery: awaiting_assets',
+    'ui.node.expand()', 'windows: smooth_transition'
+  ];
+
+  function resize() {
+    W = innerWidth; H = innerHeight; cx = W / 2; cy = H / 2;
+    coreRadius = Math.min(W, H) * (W < 650 ? .22 : .18);
+    scene.width = W * DPR; scene.height = H * DPR;
+    scene.style.width = W + 'px'; scene.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    codeCanvas.width = W * DPR; codeCanvas.height = H * DPR;
+    codeCanvas.style.width = W + 'px'; codeCanvas.style.height = H + 'px';
+    cctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    seedGlyphs();
+  }
+
+  function seedGlyphs() {
+    glyphs.length = 0;
+    const count = Math.max(18, Math.floor((W * H) / 52000));
+    for (let i = 0; i < count; i++) {
+      glyphs.push({
+        text: glyphPool[(Math.random() * glyphPool.length) | 0],
+        x: Math.random() * W,
+        y: Math.random() * H,
+        size: 8 + Math.random() * 3,
+        speed: .04 + Math.random() * .12,
+        phase: Math.random() * Math.PI * 2,
+        offset: Math.random() * 18
+      });
+    }
+  }
+
+  function rotatePoint(p, ax, ay, az) {
+    let x = p.x, y = p.y, z = p.z;
+    let c = Math.cos(ay), s = Math.sin(ay);
+    [x, z] = [x*c + z*s, -x*s + z*c];
+    c = Math.cos(ax); s = Math.sin(ax);
+    [y, z] = [y*c - z*s, y*s + z*c];
+    c = Math.cos(az); s = Math.sin(az);
+    [x, y] = [x*c - y*s, x*s + y*c];
+    return { x, y, z };
+  }
+
+  function drawCore() {
+    ctx.clearRect(0, 0, W, H);
+    t += reducedMotion ? .0015 : .0045;
+    spinBoost *= .965;
+    pulseBoost *= .94;
+
+    mouseX += (targetX - mouseX) * .045;
+    mouseY += (targetY - mouseY) * .045;
+
+    const rotY = t * (.7 + spinBoost) + mouseX * .45;
+    const rotX = -.22 + mouseY * .25 + Math.sin(t*.55)*.05;
+    const rotZ = Math.sin(t*.33) * .08;
+    const breathe = 1 + Math.sin(t * 2.05) * .025 + pulseBoost * .05;
+    const radius = coreRadius * breathe;
+
+    const grad = ctx.createRadialGradient(cx, cy, radius*.05, cx, cy, radius*1.9);
+    grad.addColorStop(0, 'rgba(119,255,221,.065)');
+    grad.addColorStop(.38, 'rgba(80,177,169,.025)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(cx, cy, radius*1.9, 0, Math.PI*2); ctx.fill();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    rings.forEach((ring, idx) => {
+      const rr = radius * (1.2 + idx * .09 + Math.sin(t*1.2 + ring.phase)*.02);
+      ctx.save();
+      ctx.rotate(t * ring.speed + ring.phase);
+      ctx.scale(1, .26 + idx*.03);
+      ctx.strokeStyle = `rgba(134, 255, 225, ${0.10 - idx*.014})`;
+      ctx.lineWidth = .6;
+      ctx.setLineDash([2, 6 + idx*2]);
+      ctx.beginPath(); ctx.arc(0, 0, rr, 0, Math.PI*2); ctx.stroke();
+      ctx.restore();
+    });
+    ctx.restore();
+
+    const projected = [];
+    for (const p of points) {
+      const q = rotatePoint(p, rotX + Math.sin(p.seed + t)*.012, rotY, rotZ);
+      const wobble = 1 + Math.sin(p.seed*2 + t*2.4 + q.y*4) * .035;
+      const perspective = 2.7 / (3.4 - q.z);
+      projected.push({
+        sx: cx + q.x * radius * perspective * wobble,
+        sy: cy + q.y * radius * perspective * wobble,
+        z: q.z,
+        size: p.size * perspective,
+        halo: p.halo,
+        seed: p.seed
+      });
+    }
+    projected.sort((a,b) => a.z - b.z);
+
+    ctx.lineWidth = .35;
+    for (let i = 0; i < projected.length; i += 18) {
+      const a = projected[i];
+      if (a.z < -.1) continue;
+      for (let j = i + 1; j < Math.min(i + 36, projected.length); j += 9) {
+        const b = projected[j];
+        if (b.z < -.1) continue;
+        const dx = a.sx - b.sx, dy = a.sy - b.sy;
+        const d2 = dx*dx + dy*dy;
+        if (d2 < radius*radius*.12) {
+          ctx.strokeStyle = `rgba(169, 255, 236, ${Math.max(0, .045 - d2/(radius*radius)*.2)})`;
+          ctx.beginPath(); ctx.moveTo(a.sx, a.sy); ctx.lineTo(b.sx, b.sy); ctx.stroke();
+        }
+      }
+    }
+
+    for (const p of projected) {
+      const depth = (p.z + 1) / 2;
+      const alpha = .16 + depth * .78;
+      const flicker = .74 + Math.sin(t*6 + p.seed) * .2;
+      const rr = Math.max(.35, p.size * (1.1 + depth*.7));
+      ctx.fillStyle = `rgba(${160 + depth*70}, ${215 + depth*40}, ${208 + depth*42}, ${alpha*flicker})`;
+      ctx.beginPath(); ctx.arc(p.sx, p.sy, rr, 0, Math.PI*2); ctx.fill();
+      if (p.halo && depth > .55) {
+        ctx.strokeStyle = `rgba(113,255,215,${.055*depth})`;
+        ctx.beginPath(); ctx.arc(p.sx, p.sy, rr*4.2, 0, Math.PI*2); ctx.stroke();
+      }
+    }
+
+    const rim = ctx.createRadialGradient(cx, cy, radius*.73, cx, cy, radius*1.03);
+    rim.addColorStop(0, 'rgba(255,255,255,0)');
+    rim.addColorStop(.85, 'rgba(210,255,246,.02)');
+    rim.addColorStop(1, 'rgba(190,255,241,.28)');
+    ctx.fillStyle = rim;
+    ctx.beginPath(); ctx.arc(cx, cy, radius*1.04, 0, Math.PI*2); ctx.fill();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(-t*.32);
+    for (let i = 0; i < 64; i++) {
+      const a = (i / 64) * Math.PI*2;
+      const mod = .94 + Math.sin(i*1.7 + t*5)*.035;
+      const r1 = radius * 1.01;
+      const r2 = radius * (1.04 + .035 * ((i%7)===0)) * mod;
+      ctx.strokeStyle = `rgba(222,255,250,${.12 + (i%7===0 ? .18 : 0)})`;
+      ctx.lineWidth = .55;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a)*r1, Math.sin(a)*r1);
+      ctx.lineTo(Math.cos(a)*r2, Math.sin(a)*r2);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    requestAnimationFrame(drawCore);
+  }
+
+  function drawCode() {
+    cctx.clearRect(0, 0, W, H);
+    cctx.textBaseline = 'middle';
+    for (const g of glyphs) {
+      const wave = Math.sin(t * g.speed * 9 + g.phase);
+      const alpha = Math.pow((wave + 1) / 2, 2.15) * .29;
+      const drift = (t * 38 * g.speed + g.offset) % 44;
+      cctx.font = `${g.size}px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
+      cctx.fillStyle = `rgba(184, 224, 216, ${alpha})`;
+      cctx.fillText(g.text, g.x + Math.sin(g.phase+t*.2)*10, g.y - drift);
+    }
+    requestAnimationFrame(drawCode);
+  }
+
+  function setPointer(x, y) {
+    targetX = ((x / W) - .5) * 2;
+    targetY = ((y / H) - .5) * 2;
+  }
+
+  addEventListener('mousemove', (e) => setPointer(e.clientX, e.clientY), { passive: true });
+  addEventListener('touchmove', (e) => {
+    if (e.touches[0]) setPointer(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  addEventListener('resize', resize);
+
+  const panels = [...document.querySelectorAll('.page-panel')];
+  const menuBtns = [...document.querySelectorAll('.menu button')];
+
+  function wakeInterface() {
+    if (interfaceAwake) return;
+    interfaceAwake = true;
+    app.classList.add('interface-awake');
+    coreHint.textContent = '[ выберите раздел и откройте окно ]';
+    pulseBoost = 1.2;
+    spinBoost = .75;
+    statusText.textContent = 'Navigation unlocked';
+  }
+
+  function closePanels() {
+    panels.forEach(p => p.classList.remove('open'));
+    menuBtns.forEach(b => b.classList.remove('active'));
+    panelLayer.classList.remove('active');
+    coreHint.style.opacity = interfaceAwake ? '.88' : '.65';
+    statusText.textContent = interfaceAwake ? 'Navigation standby' : 'VLG core online';
+  }
+
+  function setPanelOrigin(panel, sourceEl) {
+    if (!sourceEl) {
+      panel.style.setProperty('--origin-x', '50%');
+      panel.style.setProperty('--origin-y', '50%');
+      return;
+    }
+    const r = sourceEl.getBoundingClientRect();
+    panel.style.setProperty('--origin-x', `${r.left + r.width / 2}px`);
+    panel.style.setProperty('--origin-y', `${r.top + r.height / 2}px`);
+  }
+
+  function openPanel(name, sourceEl) {
+    wakeInterface();
+    const panel = panels.find(p => p.dataset.panel === name);
+    if (!panel) return;
+    panels.forEach(p => p.classList.remove('open'));
+    menuBtns.forEach(b => b.classList.toggle('active', b.dataset.page === name));
+    setPanelOrigin(panel, sourceEl);
+    panelLayer.classList.add('active');
+    coreHint.style.opacity = '0';
+    pulseBoost = 1;
+    spinBoost = .9;
+    requestAnimationFrame(() => panel.classList.add('open'));
+    statusText.textContent = `Node / ${name} / active`;
+  }
+
+  coreHit.addEventListener('click', () => {
+    if (!interfaceAwake) {
+      wakeInterface();
+    } else {
+      pulseBoost = .7;
+      spinBoost = .5;
+      statusText.textContent = panels.some(p => p.classList.contains('open')) ? 'Node active' : 'Navigation standby';
+    }
+  });
+
+  menuBtns.forEach(btn => btn.addEventListener('click', () => openPanel(btn.dataset.page, btn)));
+  document.querySelectorAll('.close-btn').forEach(btn => btn.addEventListener('click', closePanels));
+  panelBackdrop.addEventListener('click', closePanels);
+
+  addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePanels();
+  });
+
+  document.getElementById('langBtn').addEventListener('click', (e) => {
+    e.currentTarget.textContent = e.currentTarget.textContent === 'RU' ? 'EN' : 'RU';
+  });
+
+  function updateTime() {
+    const d = new Date();
+    document.getElementById('timeBtn').textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  updateTime();
+  setInterval(updateTime, 30000);
+
+  resize();
+  drawCore();
+  drawCode();
+
+  setTimeout(() => boot.classList.add('hidden'), 1050);
+})();
+</script>
+</body>
+</html>

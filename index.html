@@ -62,6 +62,7 @@
 
   #scene,
   #codeRain,
+  #coreGlow,
   .noise,
   .vignette,
   .grid,
@@ -73,6 +74,7 @@
 
   #scene { z-index: 3; cursor: default; }
   #codeRain { z-index: 1; pointer-events: none; }
+  #coreGlow { z-index: -1; pointer-events: none; }
 
   .bg-image {
     position: absolute;
@@ -1008,6 +1010,7 @@
 <body>
 <div class="app" id="app">
   <canvas id="codeRain"></canvas>
+  <canvas id="coreGlow"></canvas>
   <canvas id="scene"></canvas>
   <div class="bg-image"></div>
   <div class="grid"></div>
@@ -1221,6 +1224,8 @@
   const ctx = scene.getContext('2d');
   const codeCanvas = document.getElementById('codeRain');
   const cctx = codeCanvas.getContext('2d');
+  const glowCanvas = document.getElementById('coreGlow');
+  const gctx = glowCanvas.getContext('2d');
   const app = document.getElementById('app');
   const coreHit = document.getElementById('coreHit');
   const coreHint = document.getElementById('coreHint');
@@ -1287,6 +1292,9 @@
     codeCanvas.width = W * DPR; codeCanvas.height = H * DPR;
     codeCanvas.style.width = W + 'px'; codeCanvas.style.height = H + 'px';
     cctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    glowCanvas.width = W * DPR; glowCanvas.height = H * DPR;
+    glowCanvas.style.width = W + 'px'; glowCanvas.style.height = H + 'px';
+    gctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     seedGlyphs();
   }
 
@@ -1347,17 +1355,6 @@
       blue.addColorStop(1, 'rgba(100, 170, 255, 0)');
       ctx.fillStyle = blue;
       ctx.beginPath(); ctx.arc(cx, cy, radius * (1.1 + ringPulse * .5), 0, Math.PI*2); ctx.fill();
-    }
-
-    // Слабая синяя мерцающая точка в центре — только в разблокированном режиме
-    if (interfaceAwake) {
-      const flicker = .55 + Math.sin(t * 3.1) * .25 + Math.sin(t * 7.3) * .12;
-      const coreDot = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * .16);
-      coreDot.addColorStop(0, `rgba(150, 200, 255, ${.5 * flicker})`);
-      coreDot.addColorStop(.4, `rgba(110, 175, 255, ${.22 * flicker})`);
-      coreDot.addColorStop(1, 'rgba(100, 170, 255, 0)');
-      ctx.fillStyle = coreDot;
-      ctx.beginPath(); ctx.arc(cx, cy, radius * .16, 0, Math.PI*2); ctx.fill();
     }
 
     ctx.save();
@@ -1445,6 +1442,19 @@
     ctx.restore();
 
     requestAnimationFrame(drawCore);
+  }
+
+  function drawGlow() {
+    gctx.clearRect(0, 0, W, H);
+    if (!interfaceAwake) { requestAnimationFrame(drawGlow); return; }
+    const flicker = .55 + Math.sin(t * 3.1) * .25 + Math.sin(t * 7.3) * .12;
+    const glow = gctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.15);
+    glow.addColorStop(0, `rgba(150, 200, 255, ${.5 * flicker})`);
+    glow.addColorStop(.35, `rgba(110, 175, 255, ${.22 * flicker})`);
+    glow.addColorStop(1, 'rgba(100, 170, 255, 0)');
+    gctx.fillStyle = glow;
+    gctx.beginPath(); gctx.arc(cx, cy, radius * 1.15, 0, Math.PI*2); gctx.fill();
+    requestAnimationFrame(drawGlow);
   }
 
   function drawCode() {
@@ -1768,6 +1778,7 @@
   resize();
   drawCore();
   drawCode();
+  drawGlow();
 
   setTimeout(() => boot.classList.add('hidden'), 1050);
 })();

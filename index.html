@@ -61,14 +61,16 @@
   #codeRain { z-index: 1; pointer-events: none; }
 
   .bg-image {
+    position: absolute;
+    inset: 0;
     z-index: 0;
     pointer-events: none;
     background-image: url('fon/fon.webp');
     background-size: cover;
     background-position: center;
-    opacity: .18;
-    filter: saturate(.92) brightness(.92);
-    mask-image: radial-gradient(circle at center, #000 26%, rgba(0,0,0,.55) 68%, transparent 100%);
+    opacity: .5;
+    filter: saturate(1.05) brightness(.95);
+    mask-image: radial-gradient(circle at center, #000 40%, rgba(0,0,0,.72) 78%, transparent 100%);
   }
 
   .grid {
